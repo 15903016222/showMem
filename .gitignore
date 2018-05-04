@@ -1,0 +1,14 @@
+*.o
+*.user
+*.BACKUP.*
+*.LOCAL.*
+*.BASE.*
+*.REMOTE.*
+*.qm
+build
+*.orig
+/Fpga
+/Source
+/Focallaw
+/Mcu
+/build*
