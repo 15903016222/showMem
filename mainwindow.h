@@ -7,6 +7,7 @@ namespace Ui {
 class MainWindow;
 }
 
+class showMemDialog;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -17,6 +18,7 @@ public:
 
 private:
     Ui::MainWindow *ui;
+    showMemDialog *m_dialog;
 };
 
 #endif // MAINWINDOW_H
