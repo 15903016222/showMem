@@ -6,7 +6,7 @@ write_xml()
 {
 	echo "<disk>" >> $FILE
 	echo "<name>$1</name>" >> $FILE
-	echo "<used>$2</used>" >> $FILE
+	echo "<total>$2</total>" >> $FILE
 	echo "<free>$3</free>" >> $FILE
 	echo "</disk>" >> $FILE
 }
@@ -14,7 +14,7 @@ write_xml()
 get_disk_info()
 {
 	disk=`cat /proc/mounts | grep "$1" | awk '{print $2}'`
-	used=`df $disk | grep "$disk" | awk '{print $3}'`
+	total=`df $disk | grep "$disk" | awk '{print $2}'`
 	free=`df $disk | grep "$disk" | awk '{print $4}'`
 	if [ "/" == "$disk" ]
 	then
@@ -33,6 +33,6 @@ echo "<disks>" > $FILE
 for content in `echo $contents`
 do
 	get_disk_info $content
-	write_xml $disk $used $free
+	write_xml $disk $total $free
 done
 echo "</disks>" >> $FILE
