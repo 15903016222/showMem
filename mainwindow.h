@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QPushButton>
 
 namespace Ui {
 class MainWindow;
@@ -18,6 +19,7 @@ public:
 
 private:
     Ui::MainWindow *ui;
+    QPushButton *m_button;
     showMemDialog *m_dialog;
 };
 
