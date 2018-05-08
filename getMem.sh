@@ -6,8 +6,8 @@ write_xml()
 {
 	echo "<disk>" >> $FILE
 	echo "<name>$1</name>" >> $FILE
-	echo "<total>$2</total>" >> $FILE
 	echo "<free>$3</free>" >> $FILE
+	echo "<total>$2</total>" >> $FILE
 	echo "</disk>" >> $FILE
 }
 
