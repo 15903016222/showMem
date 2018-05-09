@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FILE="/tmp/demo.xml"
+FILE="/tmp/mem.xml"
 
 write_xml()
 {
