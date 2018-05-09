@@ -1,14 +1,9 @@
 #ifndef SHOWMEMDIALOG_H
 #define SHOWMEMDIALOG_H
-
 #include <QDialog>
 
 #define MAXMEMNUMS 6
 #define LABELNUMS  2
-
-namespace Ui {
-class showMemDialog;
-}
 
 class QLabel;
 class QProgressBar;
@@ -18,18 +13,19 @@ class showMemDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit showMemDialog(QWidget *parent = 0);
+    showMemDialog(QWidget *parent = 0);
     ~showMemDialog();
 
-    void show_volume(int num, QString name, QString value);
-    void set_font(int pix);
-    void delete_mem_info();
+    void setUi();
+    void init_label_progreebar();
+    void display_mem_info(int, QString, QString);
+    int analyze_mem_info(QString);
 
 public slots:
-    void show();
+    virtual int exec();
 
 private:
-    Ui::showMemDialog *ui;
+    QPushButton *m_ok;
     QLabel *m_label[MAXMEMNUMS][LABELNUMS];
     QProgressBar *m_bar[MAXMEMNUMS];
     float m_free;
