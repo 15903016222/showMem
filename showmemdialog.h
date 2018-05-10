@@ -16,8 +16,8 @@ public:
     showMemDialog(QWidget *parent = 0);
     ~showMemDialog();
 
-    void setUi();
-    void init_label_progreebar();
+    void setupUi();
+    void hide_label_progreebar();
     void display_mem_info(int, QString, QString);
     int analyze_mem_info(QString);
 

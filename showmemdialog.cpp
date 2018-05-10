@@ -43,34 +43,34 @@ showMemDialog::showMemDialog(QWidget *parent) :
     QDialog(parent),
     m_ok(new QPushButton(this))
 {
-    this->setUi();
+    this->setupUi();
     m_free  = 0.0;
     m_total = 0.0;
 }
 
 showMemDialog::~showMemDialog()
 {
-    init_label_progreebar();
+    for (int i = 0; i < MAXMEMNUMS; ++i) {
+        delete m_bar[i];
+        delete m_label[i][DISK_NAME];
+        delete m_label[i][DISK_VOLUME];
+    }
     delete m_ok;
 }
 
-void showMemDialog::init_label_progreebar()
+void showMemDialog::hide_label_progreebar()
 {
     for (int i = 0; i < MAXMEMNUMS; ++i) {
-        if (m_bar[i]) {
-            delete m_bar[i];
-            m_bar[i] = NULL;
-        }
+        m_bar[i]->setVisible(false);
         for (int j = 0; j < LABELNUMS; ++j) {
             if (m_label[i][j]) {
-                delete m_label[i][j];
-                m_label[i][j] = NULL;
+                m_label[i][j]->setVisible(false);
             }
         }
     }
 }
 
-void showMemDialog::setUi()
+void showMemDialog::setupUi()
 {
     setWindowFlags(this->windowFlags() & ~(Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint));
     setFixedSize(600, 400);
@@ -82,45 +82,53 @@ void showMemDialog::setUi()
     this->setStyleSheet(PROGRESSBAR_STYLE);
 
     for (int i = 0; i < MAXMEMNUMS; ++i) {
-        m_bar[i] = NULL;
-        for (int j = 0; j < LABELNUMS; ++j) {
-            m_label[i][j] = NULL;
-        }
+        m_bar[i] = new QProgressBar(this);
+        m_bar[i]->setGeometry(X_OFFSET + (i % 2) * (WIDTH + 20),
+                                Y_OFFSET + 40 + (i / 2) * VDIVISION,
+                                WIDTH,
+                                HEIGHT);
+
+        m_bar[i]->setTextVisible(false);
+        m_bar[i]->setVisible(false);
+
+        m_label[i][DISK_NAME] = new QLabel(this);
+        m_label[i][DISK_NAME]->setGeometry(X_OFFSET + (i % 2) * (WIDTH + 20),
+                                     Y_OFFSET + (i / 2) * VDIVISION,
+                                     WIDTH,
+                                     HEIGHT * 2);
+        m_label[i][DISK_NAME]->setFont(m_ft);
+        m_label[i][DISK_NAME]->setAlignment(Qt::AlignLeft);
+        m_label[i][DISK_NAME]->setVisible(false);
+
+        m_label[i][DISK_VOLUME] = new QLabel(this);
+        m_label[i][DISK_VOLUME]->setGeometry(X_OFFSET + (i % 2) * (WIDTH + 20),
+                                     Y_OFFSET + 60 + (i / 2) * VDIVISION,
+                                     WIDTH,
+                                     HEIGHT * 2);
+        m_label[i][DISK_VOLUME]->setFont(m_ft);
+        m_label[i][DISK_VOLUME]->setAlignment(Qt::AlignLeft);
+        m_label[i][DISK_VOLUME]->setVisible(false);
     }
 }
 
 void showMemDialog::display_mem_info(int num, QString name, QString value)
 {
     if (name == QString("name")) {
-        m_label[num][DISK_NAME] = new QLabel(this);
-        m_label[num][DISK_NAME]->setGeometry(X_OFFSET + (num % 2) * (WIDTH + 20),
-                                     Y_OFFSET + (num / 2) * VDIVISION,
-                                     WIDTH,
-                                     HEIGHT * 2);
-        m_label[num][DISK_NAME]->setFont(m_ft);
-        m_label[num][DISK_NAME]->setAlignment(Qt::AlignLeft);
+
         m_label[num][DISK_NAME]->setText(value);
+        m_label[num][DISK_NAME]->setVisible(true);
     }
     else if (name == QString("free")) {
         m_free = CALCU_MEM(value.toFloat());
     }
     else if (name == QString("total")) {
-        m_label[num][DISK_VOLUME] = new QLabel(this);
-        m_label[num][DISK_VOLUME]->setGeometry(X_OFFSET + (num % 2) * (WIDTH + 20),
-                                     Y_OFFSET + 60 + (num / 2) * VDIVISION,
-                                     WIDTH,
-                                     HEIGHT * 2);
         m_total = CALCU_MEM(value.toFloat());
-        m_label[num][DISK_VOLUME]->setFont(m_ft);
-        m_label[num][DISK_VOLUME]->setAlignment(Qt::AlignLeft);
+
         m_label[num][DISK_VOLUME]->setText(QString::number(m_free, 'f', 2) + "/" + QString::number(m_total, 'f', 2) + "GB");
-        m_bar[num] = new QProgressBar(this);
-        m_bar[num]->setGeometry(X_OFFSET + (num % 2) * (WIDTH + 20),
-                                Y_OFFSET + 40 + (num / 2) * VDIVISION,
-                                WIDTH,
-                                HEIGHT);
-        m_bar[num]->setTextVisible(false);
+        m_label[num][DISK_VOLUME]->setVisible(true);
+
         m_bar[num]->setValue(100 - (m_free / m_total) * 100);
+        m_bar[num]->setVisible(true);
     }
 
     return ;
@@ -180,7 +188,7 @@ int showMemDialog::analyze_mem_info(QString file_name)
 int showMemDialog::exec()
 {
     // 初始化显示模块
-    init_label_progreebar();
+    hide_label_progreebar();
 
     // 获取系统存储信息
     get_mem_info();
