@@ -4,7 +4,7 @@
 #include <QProgressBar>
 #include <QProcess>
 #include <QtXml>
-#include <QMessageBox>
+#include <QThread>
 
 #define CALCU_MEM(x) ((x) * 1000 / 1024 / 1024 / 1024)
 
@@ -23,29 +23,27 @@
 #define PROGRESSBAR_STYLE ("QProgressBar::chunk {background-color: #FF0000; width: 10px;} \
                              QProgressBar { border: 1px solid black;}")
 
-#define FILE_NAME ("/tmp/mem.xml")
-#define RM_MEM_FILE ("rm /tmp/mem.xml")
-#define GET_MEM_CMD1 ("/bin/bash /usr/bin/getMem.sh")
-#define GET_MEM_CMD2 ("/bin/bash /home/ws/project/phascan-II/showMem/getMem.sh")
-
-void get_mem_info()
-{
-    QProcess *proc = new QProcess;
-    proc->start(GET_MEM_CMD1);
-    if (proc->waitForFinished()) {
-        proc->start(GET_MEM_CMD2);
-        proc->waitForFinished();
-    }
-    delete proc;
-}
-
 showMemDialog::showMemDialog(QWidget *parent) :
     QDialog(parent),
-    m_ok(new QPushButton(this))
+    m_ok(new QPushButton(this)),
+    m_getmem(new getMemInfo),
+    m_free(0.0),
+    m_total(0.0),
+    m_num(0)
 {
     this->setupUi();
-    m_free  = 0.0;
-    m_total = 0.0;
+    QThread *thread = new QThread;
+    connect(this,
+            SIGNAL(send_get_mem_info_sig()),
+            m_getmem,
+            SLOT(receive_get_mem_info_sig()));
+    connect(m_getmem,
+            SIGNAL(send_mem_info_content(QString)),
+            this,
+            SLOT(receive_mem_info_content(QString)));
+
+    m_getmem->moveToThread(thread);
+    thread->start();
 }
 
 showMemDialog::~showMemDialog()
@@ -55,6 +53,7 @@ showMemDialog::~showMemDialog()
         delete m_label[i][DISK_NAME];
         delete m_label[i][DISK_VOLUME];
     }
+    delete m_getmem;
     delete m_ok;
 }
 
@@ -90,7 +89,6 @@ void showMemDialog::setupUi()
 
         m_bar[i]->setTextVisible(false);
         m_bar[i]->setVisible(false);
-
         m_label[i][DISK_NAME] = new QLabel(this);
         m_label[i][DISK_NAME]->setGeometry(X_OFFSET + (i % 2) * (WIDTH + 20),
                                      Y_OFFSET + (i / 2) * VDIVISION,
@@ -99,7 +97,6 @@ void showMemDialog::setupUi()
         m_label[i][DISK_NAME]->setFont(m_ft);
         m_label[i][DISK_NAME]->setAlignment(Qt::AlignLeft);
         m_label[i][DISK_NAME]->setVisible(false);
-
         m_label[i][DISK_VOLUME] = new QLabel(this);
         m_label[i][DISK_VOLUME]->setGeometry(X_OFFSET + (i % 2) * (WIDTH + 20),
                                      Y_OFFSET + 60 + (i / 2) * VDIVISION,
@@ -113,15 +110,15 @@ void showMemDialog::setupUi()
 
 void showMemDialog::display_mem_info(int num, QString name, QString value)
 {
-    if (name == QString("name")) {
-
+    qDebug() << "num: " << num;
+    if (!name.compare(QString("name"))) {
         m_label[num][DISK_NAME]->setText(value);
         m_label[num][DISK_NAME]->setVisible(true);
     }
-    else if (name == QString("free")) {
+    else if (!name.compare(QString("free"))) {
         m_free = CALCU_MEM(value.toFloat());
     }
-    else if (name == QString("total")) {
+    else if (!name.compare(QString("total"))) {
         m_total = CALCU_MEM(value.toFloat());
 
         m_label[num][DISK_VOLUME]->setText(QString::number(m_free, 'f', 2) + "/" + QString::number(m_total, 'f', 2) + "GB");
@@ -134,73 +131,25 @@ void showMemDialog::display_mem_info(int num, QString name, QString value)
     return ;
 }
 
-int open_file(QString file_name, QDomDocument *doc)
-{
-    QFile file (file_name);
-    if (!file.open(QFile::ReadOnly)) {
-        return -1;
-    }
-
-    if (!doc->setContent(&file)) {
-        file.close();
-        return -1;
-    }
-    file.close();
-
-    // delete xml file
-    QProcess *proc = new QProcess;
-    proc->start(RM_MEM_FILE);
-    proc->waitForFinished();
-    delete proc;
-
-    return 0;
-}
-
-int showMemDialog::analyze_mem_info(QString file_name)
-{
-    QDomDocument *doc = new QDomDocument;
-    if (0 != open_file(file_name, doc)) {
-        return -1;
-    }
-
-    QDomElement root = doc->documentElement();
-    QDomNode node = root.firstChild();
-    int count = 0;
-    while (!node.isNull()) {
-        if (node.isElement()) {
-            QDomElement e = node.toElement();
-            QDomNodeList list = e.childNodes();
-            for (int i = 0; i < list.count(); ++i) {
-                QDomNode n = list.at(i);
-                if (node.isElement()) {
-                    //qDebug() << n.nodeName() << ":" << n.toElement().text();
-                    display_mem_info(count, n.nodeName(), n.toElement().text());
-                }
-            }
-            ++count;
-        }
-        node = node.nextSibling();
-    }
-
-    return 0;
-}
-
 int showMemDialog::exec()
 {
+    qDebug() << QThread::currentThread();
+    emit send_get_mem_info_sig();
+    m_num = 0;
     // 初始化显示模块
     hide_label_progreebar();
 
-    // 获取系统存储信息
-    get_mem_info();
-
-    // 解析数据
-    if (-1 == analyze_mem_info(FILE_NAME)) {
-        QMessageBox::critical(this,
-                              "Error",
-                              "不能获取存储信息",
-                              QMessageBox::Abort);
-        return -1;
-    }
-
     this->show();
+}
+
+void showMemDialog::receive_mem_info_content(QString content)
+{
+    qDebug() << __func__ << QThread::currentThread();
+    QString name = content;
+    name.truncate(name.indexOf('+'));
+    QString value;
+    value = content.right(content.length() - content.indexOf('+') - 1);
+    qDebug() << name << " : " << value;
+    display_mem_info(m_num / 3, name, value);
+    ++m_num;
 }
