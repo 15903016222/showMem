@@ -25,7 +25,6 @@
 
 showMemDialog::showMemDialog(QWidget *parent) :
     QDialog(parent),
-    m_ok(new QPushButton(this)),
     m_getmem(new getMemInfo),
     m_free(0.0),
     m_total(0.0),
@@ -73,6 +72,7 @@ void showMemDialog::setupUi()
 {
     setWindowFlags(this->windowFlags() & ~(Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint));
     setFixedSize(600, 400);
+    m_ok = new QPushButton(this);
     m_ok->setText("确定");
     m_ok->setGeometry(496, 360, 89, 25);
     connect(m_ok, SIGNAL(clicked(bool)), this, SLOT(close()));
@@ -144,6 +144,9 @@ int showMemDialog::exec()
 
 void showMemDialog::receive_mem_info_content(QString content)
 {
+    if (m_num > MAXMEMNUMS) {
+        return ;
+    }
     qDebug() << __func__ << QThread::currentThread();
     QString name = content;
     name.truncate(name.indexOf('+'));
