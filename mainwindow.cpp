@@ -8,6 +8,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     showMemDialog *dialog = new showMemDialog(this);
+    ui->centralWidget->setStyleSheet("background-color:black;");
     connect(ui->pushButton, SIGNAL(clicked(bool)), dialog, SLOT(exec()));
 }
 
