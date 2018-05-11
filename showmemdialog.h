@@ -68,6 +68,7 @@ public:
                                 QString("+") + \
                                 n.toElement().text();
                     emit send_mem_info_content(content);
+                    qDebug() << content;
                 }
             }
             node = node.nextSibling();
@@ -87,9 +88,6 @@ public slots:
         analyze_mem_info();
     }
 };
-
-#define MAXMEMNUMS 6
-#define LABELNUMS  2
 
 class QLabel;
 class QProgressBar;
@@ -116,12 +114,12 @@ public slots:
 private:
     getMemInfo *m_getmem;
     QPushButton *m_ok;
-    QLabel *m_label[MAXMEMNUMS][LABELNUMS];
-    QProgressBar *m_bar[MAXMEMNUMS];
+    QVector<QVector<QLabel *> > m_label;
+    QVector<QProgressBar *> m_bar;
     float m_free;
     float m_total;
     QFont m_ft;
-    qint8 m_num; // 存储器序号
+    qint8 m_count;
 };
 
 #endif // SHOWMEMDIALOG_H
