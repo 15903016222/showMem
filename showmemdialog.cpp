@@ -9,7 +9,7 @@
 #define MAXMEMNUMS 6
 #define LABELNUMS  2
 
-#define CALCU_MEM(x) ((x) * 1000 / 1024 / 1024 / 1024)
+#define CALCU_MEM(x) ((x) * 1024 / 1024 / 1024 / 1024)
 
 // dialog 600x400
 #define X_OFFSET 20
