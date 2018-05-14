@@ -1,0 +1,6 @@
+KERNEL=="sd[a-z]", SUBSYSTEMS=="usb", ACTION=="add", RUN+="/etc/udev/scripts/mount.sh $env{ID_FS_LABEL_ENC} $env{ID_SERIAL}"
+KERNEL=="sd[a-z]", SUBSYSTEMS=="usb", ACTION=="remove", RUN+="/etc/udev/scripts/umount.sh"
+KERNEL=="sd[a-z][0-9]", SUBSYSTEMS=="usb", ACTION=="add", ENV{DEVTYPE}=="partition", RUN+="/etc/udev/scripts/mount.sh $env{ID_FS_LABEL_ENC} $env{ID_SERIAL}"
+KERNEL=="sd[a-z][0-9]", SUBSYSTEMS=="usb", ACTION=="remove", ENV{DEVTYPE}=="partition", RUN+="/etc/udev/scripts/umount.sh"
+KERNEL=="mmcblk[0-9]p[0-9]", ACTION=="add", RUN+="/etc/udev/scripts/mount.sh $env{ID_FS_LABEL_ENC} $env{ID_SERIAL}"
+KERNEL=="mmcblk[0-9]p[0-9]", ACTION=="remove", RUN+="/etc/udev/scripts/umount.sh"
