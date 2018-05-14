@@ -68,7 +68,6 @@ public:
                                 QString("+") + \
                                 n.toElement().text();
                     emit send_mem_info_content(content);
-                    qDebug() << content;
                 }
             }
             node = node.nextSibling();
@@ -80,7 +79,6 @@ signals:
 
 public slots:
     void receive_get_mem_info_sig() {
-        qDebug() << __func__ << QThread::currentThread();
         // 获取存储信息
         get_mem_info();
 

@@ -116,7 +116,6 @@ void showMemDialog::setupUi()
 
 void showMemDialog::display_mem_info(int num, QString name, QString value)
 {
-    qDebug() << "num: " << num;
     if (!name.compare(QString("name"))) {
         m_label.at(num).at(DISK_NAME)->setText(value);
         m_label.at(num).at(DISK_NAME)->setVisible(true);
@@ -138,7 +137,6 @@ void showMemDialog::display_mem_info(int num, QString name, QString value)
 
 int showMemDialog::exec()
 {
-    qDebug() << QThread::currentThread();
     emit send_get_mem_info_sig();
     m_count = 0;
     // 隐藏图标
@@ -152,12 +150,10 @@ void showMemDialog::receive_mem_info_content(QString content)
     if ((m_count / 3) / MAXMEMNUMS) {
         return ;
     }
-    qDebug() << __func__ << QThread::currentThread();
     QString name = content;
     name.truncate(name.indexOf('+'));
     QString value;
     value = content.right(content.length() - content.indexOf('+') - 1);
-    qDebug() << name << " : " << value;
     display_mem_info(m_count / 3, name, value);
     ++m_count;
 }
