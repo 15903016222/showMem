@@ -1,10 +1,13 @@
 #include "showmemdialog.h"
+#include <QObject>
 #include <QPushButton>
 #include <QLabel>
 #include <QProgressBar>
 #include <QProcess>
 #include <QtXml>
-#include <QThread>
+#include <QMessageBox>
+#include <QDomElement>
+#include <QDebug>
 
 #define MAXMEMNUMS 6
 #define LABELNUMS  2
@@ -23,29 +26,21 @@
 #define DISK_NAME   0
 #define DISK_VOLUME 1
 
+#define FILE_NAME ("/tmp/mem.xml")
+#define RM_MEM_FILE ("rm /tmp/mem.xml")
+#define GET_MEM_CMD1 ("/bin/bash /usr/bin/getMem.sh")
+#define GET_MEM_CMD2 ("/bin/bash /home/ws/project/phascan-II/showMem/getMem.sh")
+
 #define PROGRESSBAR_STYLE ("QProgressBar::chunk {background-color: #FF0000; width: 10px;} \
                              QProgressBar { border: 1px solid black;}")
 
 showMemDialog::showMemDialog(QWidget *parent) :
     QDialog(parent),
-    m_getmem(new getMemInfo),
     m_free(0.0),
     m_total(0.0),
     m_count(0)
 {
     this->setupUi();
-    QThread *thread = new QThread;
-    connect(this,
-            SIGNAL(send_get_mem_info_sig()),
-            m_getmem,
-            SLOT(receive_get_mem_info_sig()));
-    connect(m_getmem,
-            SIGNAL(send_mem_info_content(QString)),
-            this,
-            SLOT(receive_mem_info_content(QString)));
-
-    m_getmem->moveToThread(thread);
-    thread->start();
 }
 
 showMemDialog::~showMemDialog()
@@ -55,20 +50,7 @@ showMemDialog::~showMemDialog()
         delete m_label.at(i).at(DISK_NAME);
         delete m_label.at(i).at(DISK_VOLUME);
     }
-    delete m_getmem;
     delete m_ok;
-}
-
-void showMemDialog::hide_label_progreebar()
-{
-    for (int i = 0; i < MAXMEMNUMS; ++i) {
-        m_bar.at(i)->setVisible(false);
-        for (int j = 0; j < LABELNUMS; ++j) {
-            if (m_label.at(i).at(j)) {
-                m_label.at(i).at(j)->setVisible(false);
-            }
-        }
-    }
 }
 
 void showMemDialog::setupUi()
@@ -114,6 +96,62 @@ void showMemDialog::setupUi()
     }
 }
 
+void showMemDialog::hide_label_progreebar()
+{
+    for (int i = 0; i < MAXMEMNUMS; ++i) {
+        m_bar.at(i)->setVisible(false);
+        for (int j = 0; j < LABELNUMS; ++j) {
+            if (m_label.at(i).at(j)) {
+                m_label.at(i).at(j)->setVisible(false);
+            }
+        }
+    }
+}
+
+void showMemDialog::get_mem_info()
+{
+    QProcess proc;
+    proc.start(GET_MEM_CMD1);
+    if (proc.waitForFinished()) {
+        proc.start(GET_MEM_CMD2);
+        proc.waitForFinished();
+    }
+}
+
+int showMemDialog::analyze_mem_info()
+{
+    QDomDocument doc;
+    QFile file (FILE_NAME);
+    if (!file.open(QFile::ReadOnly)) {
+        return -1;
+    }
+
+    if (!doc.setContent(&file)) {
+        file.close();
+        return -1;
+    }
+    file.close();
+
+    QDomElement root = doc.documentElement();
+    QDomNode node = root.firstChild();
+
+    m_count = 0;
+    while (!node.isNull()) {
+        if (node.isElement()) {
+            QDomElement e = node.toElement();
+            QDomNodeList list = e.childNodes();
+            for (int i = 0; i < list.count(); ++i) {
+                QDomNode n = list.at(i);
+                display_mem_info(m_count, n.nodeName(), n.toElement().text());
+            }
+        }
+        node = node.nextSibling();
+        ++m_count;
+    }
+
+    return 0;
+}
+
 void showMemDialog::display_mem_info(int num, QString name, QString value)
 {
     if (!name.compare(QString("name"))) {
@@ -137,23 +175,19 @@ void showMemDialog::display_mem_info(int num, QString name, QString value)
 
 int showMemDialog::exec()
 {
-    emit send_get_mem_info_sig();
-    m_count = 0;
     // 隐藏图标
     hide_label_progreebar();
 
-    this->show();
-}
+    get_mem_info();
 
-void showMemDialog::receive_mem_info_content(QString content)
-{
-    if ((m_count / 3) / MAXMEMNUMS) {
-        return ;
+    if (0 != analyze_mem_info()) {
+        QMessageBox::critical(this,
+                              "Error",
+                              "cannot get diak vloume",
+                              QMessageBox::Abort);
+        return -1;
     }
-    QString name = content;
-    name.truncate(name.indexOf('+'));
-    QString value;
-    value = content.right(content.length() - content.indexOf('+') - 1);
-    display_mem_info(m_count / 3, name, value);
-    ++m_count;
+
+    this->show();
+    return 0;
 }
