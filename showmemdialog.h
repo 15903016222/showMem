@@ -2,13 +2,6 @@
 #define SHOWMEMDIALOG_H
 
 #include <QDialog>
-#include <QObject>
-#include <QThread>
-#include <QProcess>
-#include <QtXml>
-#include <QDomElement>
-#include <QMessageBox>
-#include <QDebug>
 
 class QLabel;
 class QProgressBar;
