@@ -13,7 +13,7 @@ write_xml()
 
 get_disk_info()
 {
-	disk=`cat /proc/mounts | grep "$1" | awk '{print $2}'`
+	disk=`mount | grep "$1" | awk '{print $3}'`
 	total=`df $disk | grep "$disk" | awk '{print $2}'`
 	free=`df $disk | grep "$disk" | awk '{print $4}'`
 	if [ "/" == "$disk" ]
@@ -24,10 +24,9 @@ get_disk_info()
 	fi
 }
 
-
 test -f "$FILE" && rm "$FILE"
 
-contents=`cat /proc/mounts | awk '{print $1}' | grep "root\|/dev/sd\|/dev/mmc"`
+contents=`mount | awk '{print $1}' | grep "root\|/dev/sd\|/dev/mmc"`
 
 echo "<disks>" > $FILE
 for content in `echo $contents`
