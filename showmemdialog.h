@@ -15,7 +15,7 @@ public:
     ~showMemDialog();
 
     void setupUi();
-    void hide_label_progreebar();
+    void hide_label_progressbar();
 
     void get_mem_info();
     int analyze_mem_info();

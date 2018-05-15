@@ -32,11 +32,11 @@
 #define GET_MEM_CMD2 ("/bin/bash /home/ws/project/phascan-II/showMem/getMem.sh")
 
 #define PROGRESSBAR_STYLE ("QProgressBar::chunk {background-color: #FF0000; width: 10px;} \
-                             QProgressBar { border: 1px solid black;}")
+                            QProgressBar { border: 1px solid black;}")
 
 showMemDialog::showMemDialog(QWidget *parent) :
     QDialog(parent),
-    m_free(0.0),
+    m_free (0.0),
     m_total(0.0),
     m_count(0)
 {
@@ -96,7 +96,7 @@ void showMemDialog::setupUi()
     }
 }
 
-void showMemDialog::hide_label_progreebar()
+void showMemDialog::hide_label_progressbar()
 {
     for (int i = 0; i < MAXMEMNUMS; ++i) {
         m_bar.at(i)->setVisible(false);
@@ -176,7 +176,7 @@ void showMemDialog::display_mem_info(int num, QString name, QString value)
 int showMemDialog::exec()
 {
     // 隐藏图标
-    hide_label_progreebar();
+    hide_label_progressbar();
 
     get_mem_info();
 
